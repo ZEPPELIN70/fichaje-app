@@ -1,189 +1,527 @@
-
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Fichaje Trabajadores</title>
     <style>
-        body { font-family: Arial; margin: 20px; background: #f0f0f0; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
-        h1 { text-align: center; color: #2c3e50; }
-        .workers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
-        @media (min-width: 600px) { .workers { grid-template-columns: repeat(4, 1fr); } }
-        .worker { border: 2px solid #ddd; padding: 15px; text-align: center; border-radius: 8px; background: white; }
-        .worker.active { border-color: #27ae60; background: #e8f6f3; }
-        button { background: #3498db; color: white; border: none; padding: 10px; width: 100%; margin: 5px 0; border-radius: 5px; font-size: 14px; }
-        button.entrar { background: #27ae60; }
-        button.salir { background: #e74c3c; }
-        .logs { margin-top: 30px; padding: 15px; background: #ecf0f1; border-radius: 8px; }
-        .log-entry { padding: 5px; border-bottom: 1px solid #bdc3c7; font-size: 14px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 15px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 180px;
+            justify-content: center;
+        }
+        
+        .export-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .clear-btn {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .view-btn {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .workers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        @media (min-width: 768px) {
+            .workers-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .worker-card {
+            background: #fff;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .worker-card.active {
+            border-color: #4CAF50;
+            background: #f1f8e9;
+        }
+        
+        .worker-id {
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .worker-name {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .action-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        .action-btn.salir {
+            background: #f44336;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .status {
+            font-size: 12px;
+            margin-top: 10px;
+            color: #777;
+            font-style: italic;
+        }
+        
+        .logs-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        #logsContainer {
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .log-entry {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .log-time {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>👷 Fichaje Trabajadores SERVYMAN</h1>
+        <h1>👷 SISTEMA DE FICHAJE - 8 TRABAJADORES</h1>
         
-        <div class="workers" id="workersContainer">
-            <!-- Los trabajadores se cargan con JavaScript -->
+        <!-- CONTROLES PRINCIPALES -->
+        <div class="controls">
+            <button class="control-btn export-btn" onclick="exportarDatos()">
+                📤 EXPORTAR DATOS
+            </button>
+            <button class="control-btn clear-btn" onclick="limpiarHoy()">
+                🗑️ LIMPIAR HOY
+            </button>
+            <button class="control-btn view-btn" onclick="toggleLogs()">
+                📋 VER REGISTROS
+            </button>
         </div>
         
-        <div style="text-align:center; margin:20px;">
-            <button onclick="exportarDatos()" style="background:#9b59b6; width:200px;">💾 Exportar Datos</button>
-            <button onclick="limpiarRegistros()" style="background:#f39c12; width:200px;">🗑️ Limpiar Hoy</button>
+        <!-- GRID DE TRABAJADORES -->
+        <div class="workers-grid" id="workersGrid">
+            <!-- Los trabajadores se generan con JavaScript -->
         </div>
         
-        <div class="logs">
-            <h3>📋 Registros de Hoy:</h3>
-            <div id="logs"></div>
+        <!-- SECCIÓN DE REGISTROS -->
+        <div class="logs-section" id="logsSection" style="display: none;">
+            <div class="logs-header">
+                <h3>📝 REGISTROS DE HOY</h3>
+                <button class="delete-btn" onclick="limpiarRegistros()">
+                    Borrar Registros
+                </button>
+            </div>
+            <div id="logsContainer">
+                <!-- Los registros se cargan aquí -->
+            </div>
         </div>
+        
+        <!-- NOTIFICACIÓN -->
+        <div class="notification" id="notification"></div>
     </div>
 
     <script>
-        // Datos de los 8 trabajadores
-        const trabajadores = [
-            { id: 1, nombre: "DIEGO BENEROSO", estado: "fuera", hora: "" },
-            { id: 2, nombre: "DIEGO ORTEGA", estado: "fuera", hora: "" },
-            { id: 3, nombre: "MARIA JOSÉ", estado: "fuera", hora: "" },
-            { id: 4, nombre: "ANTONIO VEGA", estado: "fuera", hora: "" },
-            { id: 5, nombre: "LUCAS BENEROSO", estado: "fuera", hora: "" },
-            { id: 6, nombre: "JUAN MANUEL GALLEGO", estado: "fuera", hora: "" },
-            { id: 7, nombre: "MÓNICA GOMEZ", estado: "fuera", hora: "" },
-            { id: 8, nombre: "JOSE MANUEL DÍAZ", estado: "fuera", hora: "" }
+        // ================= CONFIGURACIÓN =================
+        const TRABAJADORES = [
+            { id: 1, nombre: "Trabajador 1", estado: "fuera", ultimoRegistro: "" },
+            { id: 2, nombre: "Trabajador 2", estado: "fuera", ultimoRegistro: "" },
+            { id: 3, nombre: "Trabajador 3", estado: "fuera", ultimoRegistro: "" },
+            { id: 4, nombre: "Trabajador 4", estado: "fuera", ultimoRegistro: "" },
+            { id: 5, nombre: "Trabajador 5", estado: "fuera", ultimoRegistro: "" },
+            { id: 6, nombre: "Trabajador 6", estado: "fuera", ultimoRegistro: "" },
+            { id: 7, nombre: "Trabajador 7", estado: "fuera", ultimoRegistro: "" },
+            { id: 8, nombre: "Trabajador 8", estado: "fuera", ultimoRegistro: "" }
         ];
-
-        // Al cargar la página
-        window.onload = function() {
-            cargarTrabajadores();
-            cargarDatosGuardados();
-        };
-
-        // Mostrar los trabajadores
-        function cargarTrabajadores() {
-            const container = document.getElementById('workersContainer');
-            container.innerHTML = '';
+        
+        const LOGS_KEY = 'fichaje_logs';
+        const STATE_KEY = 'fichaje_estado';
+        
+        // ================= INICIALIZACIÓN =================
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarEstado();
+            renderizarTrabajadores();
+            cargarRegistros();
             
-            trabajadores.forEach(t => {
-                const div = document.createElement('div');
-                div.className = worker ${t.estado === 'dentro' ? 'active' : ''};
-                div.innerHTML = `
-                    <h3>ID ${t.id}</h3>
-                    <p>${t.nombre}</p>
-                    <button class="${t.estado === 'fuera' ? 'entrar' : 'salir'}" 
-                            onclick="fichar(${t.id})">
-                        ${t.estado === 'fuera' ? '▶️ ENTRAR' : '⏸️ SALIR'}
+            // IMPORTANTE: Configurar comunicación con App Inventor
+            if (window.AppInventor) {
+                window.AppInventor.setWebViewString("app_ready");
+            }
+        });
+        
+        // ================= FUNCIONES PRINCIPALES =================
+        
+        // 1. RENDERIZAR TRABAJADORES
+        function renderizarTrabajadores() {
+            const grid = document.getElementById('workersGrid');
+            grid.innerHTML = '';
+            
+            TRABAJADORES.forEach(trabajador => {
+                const card = document.createElement('div');
+                card.className = `worker-card ${trabajador.estado === 'dentro' ? 'active' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="worker-id">ID ${trabajador.id}</div>
+                    <div class="worker-name">${trabajador.nombre}</div>
+                    <button class="action-btn ${trabajador.estado === 'dentro' ? 'salir' : ''}" 
+                            onclick="registrarEntradaSalida(${trabajador.id})">
+                        ${trabajador.estado === 'dentro' ? '⏸️ SALIR' : '▶️ ENTRAR'}
                     </button>
-                    <p><small>${t.hora || 'Sin registro'}</small></p>
+                    <div class="status">${trabajador.ultimoRegistro || 'Sin registro hoy'}</div>
                 `;
-                container.appendChild(div);
+                
+                grid.appendChild(card);
             });
         }
-
-        // Fichar entrada/salida
-        function fichar(id) {
-            const t = trabajadores.find(x => x.id === id);
+        
+        // 2. REGISTRAR ENTRADA/SALIDA
+        function registrarEntradaSalida(id) {
+            const trabajador = TRABAJADORES.find(t => t.id === id);
             const ahora = new Date();
-            const horaStr = ahora.toLocaleTimeString();
-            const fechaStr = ahora.toLocaleDateString();
+            const hora = ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const fecha = ahora.toLocaleDateString();
             
-            if (t.estado === 'fuera') {
-                // Entrada
-                t.estado = 'dentro';
-                t.hora = Entrada: ${horaStr};
-                agregarLog(Trabajador ${id}: ENTRADA a las ${horaStr});
+            let mensaje = '';
+            
+            if (trabajador.estado === 'fuera') {
+                // ENTRADA
+                trabajador.estado = 'dentro';
+                trabajador.ultimoRegistro = `Entrada: ${hora}`;
+                mensaje = `👤 Trabajador ${id}: ENTRADA a las ${hora}`;
             } else {
-                // Salida
-                t.estado = 'fuera';
-                t.hora = Salida: ${horaStr};
-                agregarLog(Trabajador ${id}: SALIDA a las ${horaStr});
+                // SALIDA
+                trabajador.estado = 'fuera';
+                trabajador.ultimoRegistro = `Salida: ${hora}`;
+                mensaje = `👤 Trabajador ${id}: SALIDA a las ${hora}`;
             }
             
-            guardarDatos();
-            cargarTrabajadores();
+            // Guardar registro
+            guardarRegistro(mensaje);
+            guardarEstado();
+            renderizarTrabajadores();
+            
+            // Mostrar notificación
+            mostrarNotificacion(mensaje);
+            
+            // Enviar a App Inventor si está disponible
+            if (window.AppInventor) {
+                window.AppInventor.setWebViewString(`accion:${mensaje}`);
+            }
         }
-
-        // Agregar registro
-        function agregarLog(mensaje) {
-            const logsDiv = document.getElementById('logs');
-            const ahora = new Date().toLocaleTimeString();
-            const entrada = document.createElement('div');
-            entrada.className = 'log-entry';
-            entrada.innerHTML = <strong>[${ahora}]</strong> ${mensaje};
-            logsDiv.prepend(entrada);
+        
+        // 3. EXPORTAR DATOS
+        function exportarDatos() {
+            const ahora = new Date();
+            let contenido = `================================\n`;
+            contenido += `INFORME DE FICHAJE\n`;
+            contenido += `Fecha: ${ahora.toLocaleDateString()}\n`;
+            contenido += `Hora de generación: ${ahora.toLocaleTimeString()}\n`;
+            contenido += `================================\n\n`;
+            
+            // Estado actual
+            contenido += `ESTADO ACTUAL:\n`;
+            contenido += `================\n`;
+            TRABAJADORES.forEach(t => {
+                contenido += `ID ${t.id}: ${t.nombre}\n`;
+                contenido += `  Estado: ${t.estado === 'dentro' ? '🔵 DENTRO' : '🔴 FUERA'}\n`;
+                contenido += `  Último: ${t.ultimoRegistro || 'Sin registro'}\n\n`;
+            });
+            
+            // Historial del día
+            contenido += `\nHISTORIAL DEL DÍA:\n`;
+            contenido += `===================\n`;
+            const logs = obtenerRegistros();
+            logs.forEach(log => {
+                contenido += `${log}\n`;
+            });
+            
+            contenido += `\n================================\n`;
+            contenido += `Total registros hoy: ${logs.length}\n`;
+            contenido += `================================`;
+            
+            // Crear y descargar archivo
+            const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `FICHAJE_${ahora.getDate()}_${ahora.getMonth()+1}_${ahora.getFullYear()}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            // Notificación
+            mostrarNotificacion('✅ Datos exportados correctamente');
+            
+            // Enviar a App Inventor
+            if (window.AppInventor) {
+                window.AppInventor.setWebViewString('exportado:success');
+            }
         }
-
-        // Guardar en memoria del navegador
-        function guardarDatos() {
-            const datos = {
-                trabajadores: trabajadores,
-                logs: document.getElementById('logs').innerHTML,
-                fecha: new Date().toDateString()
-            };
-            localStorage.setItem('fichajeApp', JSON.stringify(datos));
-        }
-
-        // Cargar datos guardados
-        function cargarDatosGuardados() {
-            const guardado = localStorage.getItem('fichajeApp');
-            if (guardado) {
-                const datos = JSON.parse(guardado);
-                // Solo cargar si es del mismo día
-                if (datos.fecha === new Date().toDateString()) {
-                    // Actualizar trabajadores
-                    datos.trabajadores.forEach(tGuardado => {
-                        const t = trabajadores.find(x => x.id === tGuardado.id);
-                        if (t) {
-                            t.estado = tGuardado.estado;
-                            t.hora = tGuardado.hora;
-                        }
-                    });
-                    // Cargar logs
-                    document.getElementById('logs').innerHTML = datos.logs;
-                    cargarTrabajadores();
+        
+        // 4. LIMPIAR HOY (reset total)
+        function limpiarHoy() {
+            if (confirm('⚠️ ¿ESTÁS SEGURO?\n\nEsto reseteará TODOS los trabajadores a "FUERA" y eliminará todos los registros del día.')) {
+                // Resetear trabajadores
+                TRABAJADORES.forEach(t => {
+                    t.estado = 'fuera';
+                    t.ultimoRegistro = '';
+                });
+                
+                // Limpiar registros
+                localStorage.removeItem(LOGS_KEY);
+                localStorage.removeItem(STATE_KEY);
+                
+                // Actualizar interfaz
+                renderizarTrabajadores();
+                cargarRegistros();
+                
+                // Notificación
+                mostrarNotificacion('🗑️ Todos los datos han sido limpiados');
+                
+                // Enviar a App Inventor
+                if (window.AppInventor) {
+                    window.AppInventor.setWebViewString('limpiado:success');
                 }
             }
         }
-
-        // Exportar datos
-        function exportarDatos() {
-            const hoy = new Date();
-            let contenido = REGISTRO DE FICHAJE\nFecha: ${hoy.toLocaleDateString()}\nHora: ${hoy.toLocaleTimeString()}\n\n;
-            
-            trabajadores.forEach(t => {
-                contenido += Trabajador ${t.id}: ${t.nombre}\n;
-                contenido += Estado: ${t.estado === 'dentro' ? 'DENTRO' : 'FUERA'}\n;
-                contenido += Último movimiento: ${t.hora || 'Ninguno'}\n;
-                contenido += ------------------------\n;
-            });
-            
-            // Crear archivo descargable
-            const blob = new Blob([contenido], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fichaje_${hoy.getDate()}_${hoy.getMonth()+1}_${hoy.getFullYear()}.txt;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            alert('✅ Datos exportados como archivo .txt');
-        }
-
-        // Limpiar registros del día
-        function limpiarRegistros() {
-            if (confirm('¿Borrar todos los registros de hoy?')) {
-                trabajadores.forEach(t => {
-                    t.estado = 'fuera';
-                    t.hora = '';
-                });
-                document.getElementById('logs').innerHTML = '';
-                guardarDatos();
-                cargarTrabajadores();
-                alert('Registros limpiados');
+        
+        // 5. VER/OCULTAR REGISTROS
+        function toggleLogs() {
+            const logsSection = document.getElementById('logsSection');
+            if (logsSection.style.display === 'none') {
+                logsSection.style.display = 'block';
+                mostrarNotificacion('📋 Mostrando registros');
+            } else {
+                logsSection.style.display = 'none';
             }
         }
+        
+        // 6. LIMPIAR SOLO REGISTROS (no estado)
+        function limpiarRegistros() {
+            if (confirm('¿Borrar solo el historial de registros?\n\nLos trabajadores mantendrán su estado actual.')) {
+                localStorage.removeItem(LOGS_KEY);
+                cargarRegistros();
+                mostrarNotificacion('📝 Historial borrado');
+            }
+        }
+        
+        // ================= FUNCIONES AUXILIARES =================
+        
+        function guardarRegistro(mensaje) {
+            const logs = obtenerRegistros();
+            const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            logs.unshift(`[${hora}] ${mensaje}`);
+            
+            // Mantener solo últimos 100 registros
+            if (logs.length > 100) logs.length = 100;
+            
+            localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
+            cargarRegistros();
+        }
+        
+        function obtenerRegistros() {
+            const logs = localStorage.getItem(LOGS_KEY);
+            return logs ? JSON.parse(logs) : [];
+        }
+        
+        function cargarRegistros() {
+            const logs = obtenerRegistros();
+            const container = document.getElementById('logsContainer');
+            
+            if (logs.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#666; padding:20px;">No hay registros hoy</div>';
+                return;
+            }
+            
+            container.innerHTML = logs.map(log => 
+                `<div class="log-entry">${log}</div>`
+            ).join('');
+        }
+        
+        function guardarEstado() {
+            const estado = TRABAJADORES.map(t => ({
+                id: t.id,
+                estado: t.estado,
+                ultimoRegistro: t.ultimoRegistro
+            }));
+            localStorage.setItem(STATE_KEY, JSON.stringify(estado));
+        }
+        
+        function cargarEstado() {
+            const guardado = localStorage.getItem(STATE_KEY);
+            if (guardado) {
+                const estado = JSON.parse(guardado);
+                estado.forEach(tGuardado => {
+                    const t = TRABAJADORES.find(t => t.id === tGuardado.id);
+                    if (t) {
+                        t.estado = tGuardado.estado;
+                        t.ultimoRegistro = tGuardado.ultimoRegistro;
+                    }
+                });
+            }
+        }
+        
+        function mostrarNotificacion(mensaje) {
+            const notif = document.getElementById('notification');
+            notif.textContent = mensaje;
+            notif.style.display = 'block';
+            notif.style.background = '#4CAF50';
+            
+            setTimeout(() => {
+                notif.style.display = 'none';
+            }, 3000);
+        }
+        
+        // ================= COMUNICACIÓN CON APP INVENTOR =================
+        
+        // Función que App Inventor puede llamar
+        window.receiveFromAppInventor = function(comando) {
+            switch(comando) {
+                case 'exportar':
+                    exportarDatos();
+                    break;
+                case 'limpiar':
+                    limpiarHoy();
+                    break;
+                case 'mostrar_logs':
+                    toggleLogs();
+                    break;
+                case 'actualizar':
+                    cargarEstado();
+                    renderizarTrabajadores();
+                    cargarRegistros();
+                    break;
+            }
+        };
+        
+        // Variable global para App Inventor
+        window.AppInventor = {
+            setWebViewString: function(text) {
+                // Esto es capturado por App Inventor
+                console.log("Enviando a App Inventor:", text);
+            }
+        };
     </script>
 </body>
-
 </html>
-
