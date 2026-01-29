@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Fichaje Trabajadores</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #f0f0f0; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+        h1 { text-align: center; color: #2c3e50; }
+        .workers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
+        @media (min-width: 600px) { .workers { grid-template-columns: repeat(4, 1fr); } }
+        .worker { border: 2px solid #ddd; padding: 15px; text-align: center; border-radius: 8px; background: white; }
+        .worker.active { border-color: #27ae60; background: #e8f6f3; }
+        button { background: #3498db; color: white; border: none; padding: 10px; width: 100%; margin: 5px 0; border-radius: 5px; font-size: 14px; }
+        button.entrar { background: #27ae60; }
+        button.salir { background: #e74c3c; }
+        .logs { margin-top: 30px; padding: 15px; background: #ecf0f1; border-radius: 8px; }
+        .log-entry { padding: 5px; border-bottom: 1px solid #bdc3c7; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👷 Sistema de Fichaje - 8 Trabajadores</h1>
+        
+        <div class="workers" id="workersContainer">
+            <!-- Los trabajadores se cargan con JavaScript -->
+        </div>
+        
+        <div style="text-align:center; margin:20px;">
+            <button onclick="exportarDatos()" style="background:#9b59b6; width:200px;">💾 Exportar Datos</button>
+            <button onclick="limpiarRegistros()" style="background:#f39c12; width:200px;">🗑️ Limpiar Hoy</button>
+        </div>
+        
+        <div class="logs">
+            <h3>📋 Registros de Hoy:</h3>
+            <div id="logs"></div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de los 8 trabajadores
+        const trabajadores = [
+            { id: 1, nombre: "Trabajador 1", estado: "fuera", hora: "" },
+            { id: 2, nombre: "Trabajador 2", estado: "fuera", hora: "" },
+            { id: 3, nombre: "Trabajador 3", estado: "fuera", hora: "" },
+            { id: 4, nombre: "Trabajador 4", estado: "fuera", hora: "" },
+            { id: 5, nombre: "Trabajador 5", estado: "fuera", hora: "" },
+            { id: 6, nombre: "Trabajador 6", estado: "fuera", hora: "" },
+            { id: 7, nombre: "Trabajador 7", estado: "fuera", hora: "" },
+            { id: 8, nombre: "Trabajador 8", estado: "fuera", hora: "" }
+        ];
+
+        // Al cargar la página
+        window.onload = function() {
+            cargarTrabajadores();
+            cargarDatosGuardados();
+        };
+
+        // Mostrar los trabajadores
+        function cargarTrabajadores() {
+            const container = document.getElementById('workersContainer');
+            container.innerHTML = '';
+            
+            trabajadores.forEach(t => {
+                const div = document.createElement('div');
+                div.className = worker ${t.estado === 'dentro' ? 'active' : ''};
+                div.innerHTML = `
+                    <h3>ID ${t.id}</h3>
+                    <p>${t.nombre}</p>
+                    <button class="${t.estado === 'fuera' ? 'entrar' : 'salir'}" 
+                            onclick="fichar(${t.id})">
+                        ${t.estado === 'fuera' ? '▶️ ENTRAR' : '⏸️ SALIR'}
+                    </button>
+                    <p><small>${t.hora || 'Sin registro'}</small></p>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Fichar entrada/salida
+        function fichar(id) {
+            const t = trabajadores.find(x => x.id === id);
+            const ahora = new Date();
+            const horaStr = ahora.toLocaleTimeString();
+            const fechaStr = ahora.toLocaleDateString();
+            
+            if (t.estado === 'fuera') {
+                // Entrada
+                t.estado = 'dentro';
+                t.hora = Entrada: ${horaStr};
+                agregarLog(Trabajador ${id}: ENTRADA a las ${horaStr});
+            } else {
+                // Salida
+                t.estado = 'fuera';
+                t.hora = Salida: ${horaStr};
+                agregarLog(Trabajador ${id}: SALIDA a las ${horaStr});
+            }
+            
+            guardarDatos();
+            cargarTrabajadores();
+        }
+
+        // Agregar registro
+        function agregarLog(mensaje) {
+            const logsDiv = document.getElementById('logs');
+            const ahora = new Date().toLocaleTimeString();
+            const entrada = document.createElement('div');
+            entrada.className = 'log-entry';
+            entrada.innerHTML = <strong>[${ahora}]</strong> ${mensaje};
+            logsDiv.prepend(entrada);
+        }
+
+        // Guardar en memoria del navegador
+        function guardarDatos() {
+            const datos = {
+                trabajadores: trabajadores,
+                logs: document.getElementById('logs').innerHTML,
+                fecha: new Date().toDateString()
+            };
+            localStorage.setItem('fichajeApp', JSON.stringify(datos));
+        }
+
+        // Cargar datos guardados
+        function cargarDatosGuardados() {
+            const guardado = localStorage.getItem('fichajeApp');
+            if (guardado) {
+                const datos = JSON.parse(guardado);
+                // Solo cargar si es del mismo día
+                if (datos.fecha === new Date().toDateString()) {
+                    // Actualizar trabajadores
+                    datos.trabajadores.forEach(tGuardado => {
+                        const t = trabajadores.find(x => x.id === tGuardado.id);
+                        if (t) {
+                            t.estado = tGuardado.estado;
+                            t.hora = tGuardado.hora;
+                        }
+                    });
+                    // Cargar logs
+                    document.getElementById('logs').innerHTML = datos.logs;
+                    cargarTrabajadores();
+                }
+            }
+        }
+
+        // Exportar datos
+        function exportarDatos() {
+            const hoy = new Date();
+            let contenido = REGISTRO DE FICHAJE\nFecha: ${hoy.toLocaleDateString()}\nHora: ${hoy.toLocaleTimeString()}\n\n;
+            
+            trabajadores.forEach(t => {
+                contenido += Trabajador ${t.id}: ${t.nombre}\n;
+                contenido += Estado: ${t.estado === 'dentro' ? 'DENTRO' : 'FUERA'}\n;
+                contenido += Último movimiento: ${t.hora || 'Ninguno'}\n;
+                contenido += ------------------------\n;
+            });
+            
+            // Crear archivo descargable
+            const blob = new Blob([contenido], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fichaje_${hoy.getDate()}_${hoy.getMonth()+1}_${hoy.getFullYear()}.txt;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Datos exportados como archivo .txt');
+        }
+
+        // Limpiar registros del día
+        function limpiarRegistros() {
+            if (confirm('¿Borrar todos los registros de hoy?')) {
+                trabajadores.forEach(t => {
+                    t.estado = 'fuera';
+                    t.hora = '';
+                });
+                document.getElementById('logs').innerHTML = '';
+                guardarDatos();
+                cargarTrabajadores();
+                alert('Registros limpiados');
+            }
+        }
+    </script>
+</body>
+</html>
